@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"github.com/lhtzbj12/sdrms/controllers"
+	"sdrms/controllers"
 
 	"github.com/astaxie/beego"
 )
@@ -36,11 +36,30 @@ func init() {
 	beego.Router("/backenduser/datagrid", &controllers.BackendUserController{}, "POST:DataGrid")
 	beego.Router("/backenduser/edit/?:id", &controllers.BackendUserController{}, "Get,Post:Edit")
 	beego.Router("/backenduser/delete", &controllers.BackendUserController{}, "Post:Delete")
+
 	//后台用户中心
 	beego.Router("/usercenter/profile", &controllers.UserCenterController{}, "Get:Profile")
 	beego.Router("/usercenter/basicinfosave", &controllers.UserCenterController{}, "Post:BasicInfoSave")
 	beego.Router("/usercenter/uploadimage", &controllers.UserCenterController{}, "Post:UploadImage")
 	beego.Router("/usercenter/passwordsave", &controllers.UserCenterController{}, "Post:PasswordSave")
+
+	//Hadoop配置路由
+	beego.Router("/hadoop/index", &controllers.HadoopController{}, "*:Index")
+	beego.Router("/hadoop/datagrid", &controllers.HadoopController{}, "POST:DataGrid")
+	beego.Router("/hadoop/edit/?:id", &controllers.HadoopController{}, "Get,Post:Edit")
+	beego.Router("/hadoop/delete", &controllers.HadoopController{}, "Post:Delete")
+
+	//Kubernetes配置路由
+	beego.Router("/kubernetes/index", &controllers.KubernetesController{}, "*:Index")
+	beego.Router("/kubernetes/datagrid", &controllers.KubernetesController{}, "POST:DataGrid")
+	beego.Router("/kubernetes/edit/?:id", &controllers.KubernetesController{}, "Get,Post:Edit")
+	beego.Router("/kubernetes/delete", &controllers.KubernetesController{}, "Post:Delete")
+
+	//Namespace配置路由
+	beego.Router("/namespace/index", &controllers.NamespaceController{}, "*:Index")
+	beego.Router("/namespace/datagrid", &controllers.NamespaceController{}, "POST:DataGrid")
+	beego.Router("/namespace/edit/?:id", &controllers.NamespaceController{}, "Get,Post:Edit")
+	beego.Router("/namespace/delete", &controllers.NamespaceController{}, "Post:Delete")
 
 	beego.Router("/home/index", &controllers.HomeController{}, "*:Index")
 	beego.Router("/home/login", &controllers.HomeController{}, "*:Login")

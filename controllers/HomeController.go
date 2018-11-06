@@ -3,9 +3,9 @@ package controllers
 import (
 	"strings"
 
-	"github.com/lhtzbj12/sdrms/enums"
-	"github.com/lhtzbj12/sdrms/models"
-	"github.com/lhtzbj12/sdrms/utils"
+	"sdrms/enums"
+	"sdrms/models"
+	"sdrms/utils"
 )
 
 type HomeController struct {

@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lhtzbj12/sdrms/enums"
-	"github.com/lhtzbj12/sdrms/models"
+	"sdrms/enums"
+	"sdrms/models"
 
 	"github.com/astaxie/beego/orm"
 )

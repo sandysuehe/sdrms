@@ -8,16 +8,14 @@ import (
 
 	"sdrms/enums"
 	"sdrms/models"
-	"sdrms/utils"
-
 	"github.com/astaxie/beego/orm"
 )
 
-type BackendUserController struct {
+type HadoopController struct {
 	BaseController
 }
 
-func (c *BackendUserController) Prepare() {
+func (c *HadoopController) Prepare() {
 	//先执行
 	c.BaseController.Prepare()
 	//如果一个Controller的多数Action都需要权限控制，则将验证放到Prepare
@@ -27,26 +25,27 @@ func (c *BackendUserController) Prepare() {
 	//c.checkLogin()
 
 }
-func (c *BackendUserController) Index() {
+func (c *HadoopController) Index() {
 	//是否显示更多查询条件的按钮
 	c.Data["showMoreQuery"] = true
 	//将页面左边菜单的某项激活
 	c.Data["activeSidebarUrl"] = c.URLFor(c.controllerName + "." + c.actionName)
+
 	//页面模板设置
 	c.setTpl()
 	c.LayoutSections = make(map[string]string)
-	c.LayoutSections["headcssjs"] = "backenduser/index_headcssjs.html"
-	c.LayoutSections["footerjs"] = "backenduser/index_footerjs.html"
+	c.LayoutSections["headcssjs"] = "hadoop/index_headcssjs.html"
+	c.LayoutSections["footerjs"] = "hadoop/index_footerjs.html"
 	//页面里按钮权限控制
-	c.Data["canEdit"] = c.checkActionAuthor("BackendUserController", "Edit")
-	c.Data["canDelete"] = c.checkActionAuthor("BackendUserController", "Delete")
+	c.Data["canEdit"] = c.checkActionAuthor("HadoopController", "Edit")
+	c.Data["canDelete"] = c.checkActionAuthor("HadoopController", "Delete")
 }
-func (c *BackendUserController) DataGrid() {
+func (c *HadoopController) DataGrid() {
 	//直接反序化获取json格式的requestbody里的值（要求配置文件里 copyrequestbody=true）
-	var params models.BackendUserQueryParam
+	var params models.HadoopQueryParam
 	json.Unmarshal(c.Ctx.Input.RequestBody, &params)
 	//获取数据列表和总数
-	data, total := models.BackendUserPageList(&params)
+	data, total := models.HadoopPageList(&params)
 	//定义返回的数据结构
 	result := make(map[string]interface{})
 	result["total"] = total
@@ -56,91 +55,56 @@ func (c *BackendUserController) DataGrid() {
 }
 
 // Edit 添加 编辑 页面
-func (c *BackendUserController) Edit() {
+func (c *HadoopController) Edit() {
 	//如果是Post请求，则由Save处理
 	if c.Ctx.Request.Method == "POST" {
 		c.Save()
 	}
 	Id, _ := c.GetInt(":id", 0)
-	m := &models.BackendUser{}
+	m := &models.Hadoop{}
 	var err error
 	if Id > 0 {
-		m, err = models.BackendUserOne(Id)
+		m, err = models.HadoopOne(Id)
 		if err != nil {
 			c.pageError("数据无效，请刷新后重试")
 		}
-		o := orm.NewOrm()
-		o.LoadRelated(m, "RoleBackendUserRel")
 	} else {
 		//添加用户时默认状态为启用
 		m.Status = enums.Enabled
 	}
 	c.Data["m"] = m
-	//获取关联的roleId列表
-	var roleIds []string
-	for _, item := range m.RoleBackendUserRel {
-		roleIds = append(roleIds, strconv.Itoa(item.Role.Id))
-	}
-	c.Data["roles"] = strings.Join(roleIds, ",")
-	c.setTpl("backenduser/edit.html", "shared/layout_pullbox.html")
+	c.setTpl("hadoop/edit.html", "shared/layout_pullbox.html")
 	c.LayoutSections = make(map[string]string)
-	c.LayoutSections["footerjs"] = "backenduser/edit_footerjs.html"
+	c.LayoutSections["footerjs"] = "hadoop/edit_footerjs.html"
 }
-func (c *BackendUserController) Save() {
-	m := models.BackendUser{}
+func (c *HadoopController) Save() {
+	m := models.Hadoop{}
 	o := orm.NewOrm()
 	var err error
 	//获取form里的值
 	if err = c.ParseForm(&m); err != nil {
 		c.jsonResult(enums.JRCodeFailed, "获取数据失败", m.Id)
 	}
-	//删除已关联的历史数据
-	if _, err := o.QueryTable(models.RoleBackendUserRelTBName()).Filter("backenduser__id", m.Id).Delete(); err != nil {
-		c.jsonResult(enums.JRCodeFailed, "删除历史关系失败", "")
-	}
+
 	if m.Id == 0 {
-		//对密码进行加密
-		m.UserPwd = utils.String2md5(m.UserPwd)
 		if _, err := o.Insert(&m); err != nil {
 			c.jsonResult(enums.JRCodeFailed, "添加失败", m.Id)
 		}
 	} else {
-		if oM, err := models.BackendUserOne(m.Id); err != nil {
+		if oM, err := models.HadoopOne(m.Id); err != nil {
 			c.jsonResult(enums.JRCodeFailed, "数据无效，请刷新后重试", m.Id)
 		} else {
-			m.UserPwd = strings.TrimSpace(m.UserPwd)
-			if len(m.UserPwd) == 0 {
-				//如果密码为空则不修改
-				m.UserPwd = oM.UserPwd
-			} else {
-				m.UserPwd = utils.String2md5(m.UserPwd)
-			}
-			//本页面不修改头像和密码，直接将值附给新m
-			m.Avatar = oM.Avatar
+			m.HadoopName = oM.HadoopName
+			m.HadoopConfig = oM.HadoopConfig
 		}
 		if _, err := o.Update(&m); err != nil {
 			c.jsonResult(enums.JRCodeFailed, "编辑失败", m.Id)
 		}
 	}
-	//添加关系
-	var relations []models.RoleBackendUserRel
-	for _, roleId := range m.RoleIds {
-		r := models.Role{Id: roleId}
-		relation := models.RoleBackendUserRel{BackendUser: &m, Role: &r}
-		relations = append(relations, relation)
-	}
-	if len(relations) > 0 {
-		//批量添加
-		if _, err := o.InsertMulti(len(relations), relations); err == nil {
-			c.jsonResult(enums.JRCodeSucc, "保存成功", m.Id)
-		} else {
-			c.jsonResult(enums.JRCodeFailed, "保存失败", m.Id)
-		}
-	} else {
-		c.jsonResult(enums.JRCodeSucc, "保存成功", m.Id)
-	}
+	c.jsonResult(enums.JRCodeSucc, "保存成功", m.Id)
+
 }
-func (c *BackendUserController) Delete() {
+func (c *HadoopController) Delete() {
 	strs := c.GetString("ids")
 	ids := make([]int, 0, len(strs))
 	for _, str := range strings.Split(strs, ",") {
@@ -148,7 +112,7 @@ func (c *BackendUserController) Delete() {
 			ids = append(ids, id)
 		}
 	}
-	query := orm.NewOrm().QueryTable(models.BackendUserTBName())
+	query := orm.NewOrm().QueryTable(models.HadoopTBName())
 	if num, err := query.Filter("id__in", ids).Delete(); err == nil {
 		c.jsonResult(enums.JRCodeSucc, fmt.Sprintf("成功删除 %d 项", num), 0)
 	} else {

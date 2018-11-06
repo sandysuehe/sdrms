@@ -1,0 +1,31 @@
+<form id="thisForm">
+    <input type="hidden" name="Id" id="Id" value="{{.m.Id}}">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Hadoop名称</label>
+                <input type="text" name="HadoopName" class="form-control" placeholder="长度不超过32" value="{{.m.HadoopName}}">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Hadoop配置</label>
+                <input type="text" name="HadoopConfig" class="form-control" placeholder="长度不超过128" value="{{.m.HadoopConfig}}">
+            </div>
+        </div>
+    </div>      
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>状态</label>
+                <select name="Status" id="Status" class="form-control bs-select">                   
+                    <option value="0">禁用</option>
+                    <option value="1">启用</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</form>
+</div>
